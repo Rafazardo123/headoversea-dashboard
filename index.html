@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rio Laser — Dashboard Financeiro</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0a0a0a;
+      --surface: #111111;
+      --surface2: #1a1a1a;
+      --border: rgba(255,255,255,0.08);
+      --border2: rgba(255,255,255,0.14);
+      --text: #f0f0f0;
+      --text2: #888;
+      --text3: #555;
+      --red: #E24B4A;
+      --red-dim: rgba(226,75,74,0.12);
+      --green: #4ade80;
+      --green-dim: rgba(74,222,128,0.12);
+      --blue: #60a5fa;
+      --blue-dim: rgba(96,165,250,0.10);
+      --amber: #fbbf24;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Syne', sans-serif;
+      min-height: 100vh;
+    }
+
+    /* TOP NAV */
+    nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 2rem;
+      height: 60px;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      background: rgba(10,10,10,0.92);
+      backdrop-filter: blur(12px);
+      z-index: 100;
+    }
+
+    .nav-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo-mark {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: var(--red);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .nav-title {
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+    }
+
+    .nav-title span {
+      color: var(--text2);
+      font-weight: 400;
+    }
+
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .period-tag {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      color: var(--text2);
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      padding: 4px 10px;
+      border-radius: 6px;
+    }
+
+    .btn {
+      font-family: 'Syne', sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      padding: 7px 14px;
+      border-radius: 8px;
+      border: 1px solid var(--border2);
+      background: var(--surface2);
+      color: var(--text);
+      cursor: pointer;
+      transition: all 0.15s;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn:hover { background: var(--surface); border-color: rgba(255,255,255,0.25); }
+
+    .btn-primary {
+      background: var(--red);
+      border-color: var(--red);
+      color: white;
+    }
+    .btn-primary:hover { background: #c93d3c; border-color: #c93d3c; }
+
+    /* MAIN */
+    main { padding: 2rem; max-width: 1400px; margin: 0 auto; }
+
+    /* GROUP TOTALS */
+    .group-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .group-label {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      color: var(--text3);
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    .group-title {
+      font-size: 20px;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+    }
+
+    .totals-bar {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin-bottom: 2.5rem;
+    }
+
+    .total-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.25rem 1.5rem;
+      transition: border-color 0.2s;
+    }
+
+    .total-card:hover { border-color: var(--border2); }
+
+    .total-label {
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text2);
+      margin-bottom: 8px;
+    }
+
+    .total-value {
+      font-family: 'DM Mono', monospace;
+      font-size: 26px;
+      font-weight: 500;
+      color: var(--text);
+    }
+
+    .total-value.pos { color: var(--green); }
+    .total-value.neg { color: var(--red); }
+
+    .total-sub {
+      font-size: 11px;
+      color: var(--text3);
+      margin-top: 4px;
+    }
+
+    /* COMPANIES GRID */
+    .section-label {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      color: var(--text3);
+      text-transform: uppercase;
+      margin-bottom: 1rem;
+    }
+
+    .companies-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 16px;
+      margin-bottom: 2rem;
+    }
+
+    .company-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.5rem;
+      transition: border-color 0.2s, transform 0.15s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .company-card:hover {
+      border-color: var(--border2);
+      transform: translateY(-1px);
+    }
+
+    .company-card.error { border-color: rgba(226,75,74,0.3); }
+
+    .card-accent {
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: var(--red);
+      opacity: 0.6;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 1.25rem;
+    }
+
+    .card-initial {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      background: var(--red-dim);
+      border: 1px solid rgba(226,75,74,0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--red);
+      flex-shrink: 0;
+    }
+
+    .card-name {
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      color: var(--text);
+      flex: 1;
+      margin-left: 10px;
+      padding-top: 2px;
+    }
+
+    .remove-btn {
+      background: none;
+      border: none;
+      color: var(--text3);
+      cursor: pointer;
+      font-size: 16px;
+      padding: 2px 4px;
+      line-height: 1;
+      border-radius: 4px;
+      transition: color 0.15s;
+    }
+    .remove-btn:hover { color: var(--red); }
+
+    .card-metrics {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .metric {
+      background: var(--surface2);
+      border-radius: 8px;
+      padding: 10px 12px;
+    }
+
+    .metric-label {
+      font-size: 9px;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text3);
+      margin-bottom: 5px;
+    }
+
+    .metric-value {
+      font-family: 'DM Mono', monospace;
+      font-size: 16px;
+      font-weight: 500;
+      color: var(--text);
+    }
+
+    .metric-value.pos { color: var(--green); }
+    .metric-value.neg { color: var(--red); }
+
+    .bank-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--blue-dim);
+      border: 1px solid rgba(96,165,250,0.15);
+      border-radius: 8px;
+      padding: 9px 12px;
+    }
+
+    .bank-row-label {
+      font-size: 11px;
+      color: var(--blue);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .bank-row-value {
+      font-family: 'DM Mono', monospace;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--blue);
+    }
+
+    .margin-bar {
+      margin-top: 12px;
+    }
+
+    .margin-header {
+      display: flex;
+      justify-content: space-between;
+      font-size: 10px;
+      color: var(--text3);
+      margin-bottom: 5px;
+    }
+
+    .bar-track {
+      height: 4px;
+      background: var(--surface2);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      height: 100%;
+      border-radius: 2px;
+      background: var(--green);
+      transition: width 0.6s ease;
+    }
+
+    .bar-fill.neg { background: var(--red); }
+
+    /* EMPTY STATE */
+    .empty-state {
+      text-align: center;
+      padding: 4rem 2rem;
+      border: 1px dashed var(--border2);
+      border-radius: 14px;
+      grid-column: 1 / -1;
+    }
+
+    .empty-icon {
+      width: 56px;
+      height: 56px;
+      border-radius: 14px;
+      background: var(--surface2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 1rem;
+      font-size: 24px;
+    }
+
+    .empty-title {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    .empty-sub {
+      font-size: 13px;
+      color: var(--text2);
+      margin-bottom: 1.5rem;
+    }
+
+    /* STATUS BAR */
+    .status-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 0;
+      border-top: 1px solid var(--border);
+      font-size: 11px;
+      color: var(--text3);
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--green);
+      display: inline-block;
+      margin-right: 5px;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    /* LOADING */
+    .loading {
+      text-align: center;
+      padding: 3rem;
+      color: var(--text2);
+      font-size: 13px;
+    }
+
+    .spinner {
+      width: 24px;
+      height: 24px;
+      border: 2px solid var(--border);
+      border-top-color: var(--red);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      margin: 0 auto 12px;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .fade-in {
+      animation: fadeIn 0.4s ease forwards;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* TOAST */
+    .toast {
+      position: fixed;
+      bottom: 1.5rem;
+      right: 1.5rem;
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-radius: 10px;
+      padding: 12px 16px;
+      font-size: 13px;
+      color: var(--text);
+      z-index: 999;
+      transform: translateY(100px);
+      opacity: 0;
+      transition: all 0.3s;
+      max-width: 300px;
+    }
+
+    .toast.show { transform: translateY(0); opacity: 1; }
+    .toast.success { border-color: rgba(74,222,128,0.3); }
+    .toast.error { border-color: rgba(226,75,74,0.3); }
+
+    @media (max-width: 700px) {
+      nav { padding: 0 1rem; }
+      main { padding: 1rem; }
+      .totals-bar { grid-template-columns: 1fr 1fr; }
+      .companies-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-brand">
+    <div class="logo-mark">
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+        <circle cx="9" cy="9" r="4" fill="white" opacity="0.9"/>
+        <line x1="9" y1="1" x2="9" y2="17" stroke="white" stroke-width="1.5" opacity="0.5"/>
+        <line x1="1" y1="9" x2="17" y2="9" stroke="white" stroke-width="1.5" opacity="0.5"/>
+      </svg>
+    </div>
+    <div class="nav-title">Rio Laser <span>Group</span></div>
+  </div>
+  <div class="nav-right">
+    <div class="period-tag" id="period-tag">MTD</div>
+    <button class="btn" onclick="loadDashboard()">↻ Atualizar</button>
+    <a href="/auth" class="btn btn-primary">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v12M1 7h12" stroke="white" stroke-width="1.5" stroke-linecap="round"/></svg>
+      Conectar empresa
+    </a>
+  </div>
+</nav>
+
+<main>
+  <!-- Group totals -->
+  <div class="group-header">
+    <div>
+      <div class="group-label">Consolidado do grupo</div>
+      <div class="group-title">Visão geral financeira</div>
+    </div>
+  </div>
+
+  <div class="totals-bar">
+    <div class="total-card">
+      <div class="total-label">Revenue total</div>
+      <div class="total-value" id="total-revenue">—</div>
+      <div class="total-sub" id="total-sub">Aguardando dados...</div>
+    </div>
+    <div class="total-card">
+      <div class="total-label">Expenses total</div>
+      <div class="total-value neg" id="total-expenses">—</div>
+      <div class="total-sub">Todas as unidades</div>
+    </div>
+    <div class="total-card">
+      <div class="total-label">Net income total</div>
+      <div class="total-value" id="total-net">—</div>
+      <div class="total-sub" id="total-margin">Margem do grupo</div>
+    </div>
+    <div class="total-card">
+      <div class="total-label">Saldo bancário total</div>
+      <div class="total-value" id="total-bank">—</div>
+      <div class="total-sub">Contas conectadas</div>
+    </div>
+  </div>
+
+  <div class="section-label" id="companies-label">Unidades</div>
+  <div class="companies-grid" id="companies-grid">
+    <div class="loading">
+      <div class="spinner"></div>
+      Carregando empresas...
+    </div>
+  </div>
+
+  <div class="status-bar">
+    <div><span class="status-dot"></span>Conectado ao QuickBooks</div>
+    <div id="last-update">—</div>
+  </div>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const fmt = (v) => {
+  if (v === null || v === undefined) return '—';
+  const abs = Math.abs(v);
+  const str = abs >= 1000000
+    ? '$' + (abs / 1000000).toFixed(1) + 'M'
+    : abs >= 1000
+    ? '$' + (abs / 1000).toFixed(1) + 'K'
+    : '$' + abs.toLocaleString('en-US');
+  return v < 0 ? '-' + str : str;
+};
+
+const initials = (name) => {
+  return name.split(' ').filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase();
+};
+
+function showToast(msg, type = '') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast ' + type + ' show';
+  setTimeout(() => t.className = 'toast', 3500);
+}
+
+async function removeCompany(realmId) {
+  if (!confirm('Desconectar esta empresa?')) return;
+  await fetch('/api/companies/' + realmId, { method: 'DELETE' });
+  loadDashboard();
+}
+
+function renderCompany(c) {
+  if (c.error) {
+    return `
+      <div class="company-card error fade-in">
+        <div class="card-accent"></div>
+        <div class="card-header">
+          <div class="card-initial">${initials(c.companyName)}</div>
+          <div class="card-name">${c.companyName}</div>
+          <button class="remove-btn" onclick="removeCompany('${c.realmId}')">×</button>
+        </div>
+        <div style="font-size:12px;color:var(--red);padding:8px 0">${c.error}</div>
+      </div>`;
+  }
+
+  const net = c.netIncome;
+  const netClass = net >= 0 ? 'pos' : 'neg';
+  const marginPct = c.revenue > 0 ? Math.round((net / c.revenue) * 100) : 0;
+  const barPct = Math.min(100, Math.abs(marginPct));
+  const barClass = net >= 0 ? '' : 'neg';
+
+  return `
+    <div class="company-card fade-in">
+      <div class="card-accent"></div>
+      <div class="card-header">
+        <div class="card-initial">${initials(c.companyName)}</div>
+        <div class="card-name">${c.companyName}</div>
+        <button class="remove-btn" title="Desconectar" onclick="removeCompany('${c.realmId}')">×</button>
+      </div>
+      <div class="card-metrics">
+        <div class="metric">
+          <div class="metric-label">Revenue MTD</div>
+          <div class="metric-value">${fmt(c.revenue)}</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Expenses MTD</div>
+          <div class="metric-value neg">${fmt(c.expenses)}</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Net Income</div>
+          <div class="metric-value ${netClass}">${fmt(net)}</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Margem</div>
+          <div class="metric-value ${netClass}">${marginPct}%</div>
+        </div>
+      </div>
+      <div class="bank-row">
+        <div class="bank-row-label">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+            <rect x="1" y="5" width="10" height="6" rx="1" fill="#60a5fa"/>
+            <rect x="0" y="4" width="12" height="2" rx="0.5" fill="#93c5fd"/>
+            <polygon points="6,0 12,4 0,4" fill="#60a5fa"/>
+          </svg>
+          Bank balance hoje
+        </div>
+        <div class="bank-row-value">${c.bankBalance !== null ? fmt(c.bankBalance) : 'N/D'}</div>
+      </div>
+      <div class="margin-bar">
+        <div class="margin-header">
+          <span>Expenses vs Revenue</span>
+          <span>${c.revenue > 0 ? Math.round((c.expenses/c.revenue)*100) : 0}% consumido</span>
+        </div>
+        <div class="bar-track">
+          <div class="bar-fill ${barClass}" style="width:${c.revenue > 0 ? Math.min(100, Math.round((c.expenses/c.revenue)*100)) : 0}%"></div>
+        </div>
+      </div>
+    </div>`;
+}
+
+async function loadDashboard() {
+  try {
+    const res = await fetch('/api/dashboard');
+    const data = await res.json();
+
+    const grid = document.getElementById('companies-grid');
+    const companies = data.companies || [];
+
+    // Update period tag
+    if (data.period) {
+      const d = new Date();
+      document.getElementById('period-tag').textContent =
+        'MTD · ' + d.toLocaleDateString('pt-BR', { month: 'short', day: 'numeric' });
+    }
+
+    // Update last update time
+    document.getElementById('last-update').textContent =
+      'Atualizado às ' + new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+    // Update label
+    document.getElementById('companies-label').textContent =
+      companies.length + ' Unidade' + (companies.length !== 1 ? 's' : '') + ' conectada' + (companies.length !== 1 ? 's' : '');
+
+    if (companies.length === 0) {
+      grid.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-icon">🏢</div>
+          <div class="empty-title">Nenhuma empresa conectada</div>
+          <div class="empty-sub">Clique em "Conectar empresa" para adicionar as unidades Rio Laser.</div>
+          <a href="/auth" class="btn btn-primary">Conectar primeira empresa</a>
+        </div>`;
+
+      document.getElementById('total-revenue').textContent = '—';
+      document.getElementById('total-expenses').textContent = '—';
+      document.getElementById('total-net').textContent = '—';
+      document.getElementById('total-bank').textContent = '—';
+      document.getElementById('total-sub').textContent = 'Aguardando dados...';
+      document.getElementById('total-margin').textContent = 'Margem do grupo';
+      return;
+    }
+
+    // Compute group totals
+    let totalRev = 0, totalExp = 0, totalNet = 0, totalBank = 0, bankCount = 0;
+    for (const c of companies) {
+      if (!c.error) {
+        totalRev += c.revenue || 0;
+        totalExp += c.expenses || 0;
+        totalNet += c.netIncome || 0;
+        if (c.bankBalance !== null) { totalBank += c.bankBalance; bankCount++; }
+      }
+    }
+
+    const groupMargin = totalRev > 0 ? Math.round((totalNet / totalRev) * 100) : 0;
+
+    document.getElementById('total-revenue').textContent = fmt(totalRev);
+    document.getElementById('total-expenses').textContent = fmt(totalExp);
+    document.getElementById('total-net').textContent = fmt(totalNet);
+    document.getElementById('total-net').className = 'total-value ' + (totalNet >= 0 ? 'pos' : 'neg');
+    document.getElementById('total-bank').textContent = bankCount > 0 ? fmt(totalBank) : '—';
+    document.getElementById('total-sub').textContent = companies.length + ' unidades';
+    document.getElementById('total-margin').textContent = 'Margem do grupo: ' + groupMargin + '%';
+
+    grid.innerHTML = companies.map(renderCompany).join('');
+  } catch (err) {
+    console.error(err);
+    showToast('Erro ao carregar dados. Tente novamente.', 'error');
+  }
+}
+
+// Check for URL params (post-auth redirect)
+const params = new URLSearchParams(location.search);
+if (params.get('connected')) {
+  showToast('✓ ' + params.get('connected') + ' conectada!', 'success');
+  history.replaceState({}, '', '/');
+}
+if (params.get('error')) {
+  showToast('Erro ao conectar. Tente novamente.', 'error');
+  history.replaceState({}, '', '/');
+}
+
+// Load on start, then refresh every 5 minutes
+loadDashboard();
+setInterval(loadDashboard, 5 * 60 * 1000);
+</script>
+
+</body>
+</html>
