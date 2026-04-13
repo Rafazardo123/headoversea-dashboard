@@ -16,7 +16,8 @@
       --text: #f0f0f0;
       --text2: #888;
       --text3: #555;
-      --red: #E24B4A;
+      --red: #E24B4A
+      --accent: #1a56a0;
       --red-dim: rgba(226,75,74,0.12);
       --green: #4ade80;
       --green-dim: rgba(74,222,128,0.12);
@@ -59,7 +60,7 @@
       width: 32px;
       height: 32px;
       border-radius: 8px;
-      background: var(--red);
+      background: #1a4fa0;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -112,11 +113,11 @@
     .btn:hover { background: var(--surface); border-color: rgba(255,255,255,0.25); }
 
     .btn-primary {
-      background: var(--red);
-      border-color: var(--red);
+      background: #1a4fa0;
+      border-color: #1a4fa0;
       color: white;
     }
-    .btn-primary:hover { background: #c93d3c; border-color: #c93d3c; }
+    .btn-primary:hover { background: #153d80; border-color: #153d80; }
 
     /* MAIN */
     main { padding: 2rem; max-width: 1400px; margin: 0 auto; }
@@ -180,7 +181,7 @@
     }
 
     .total-value.pos { color: var(--green); }
-    .total-value.neg { color: var(--red); }
+    .total-value.neg { color: #4a90d9; }
 
     .total-sub {
       font-size: 11px;
@@ -226,7 +227,7 @@
       position: absolute;
       top: 0; left: 0; right: 0;
       height: 2px;
-      background: var(--red);
+      background: #1a4fa0;
       opacity: 0.6;
     }
 
@@ -241,14 +242,14 @@
       width: 38px;
       height: 38px;
       border-radius: 10px;
-      background: var(--red-dim);
-      border: 1px solid rgba(226,75,74,0.2);
+      background: rgba(26,79,160,0.12);
+      border: 1px solid rgba(26,79,160,0.25);
       display: flex;
       align-items: center;
       justify-content: center;
       font-size: 14px;
       font-weight: 700;
-      color: var(--red);
+      color: #4a90d9;
       flex-shrink: 0;
     }
 
@@ -273,7 +274,7 @@
       border-radius: 4px;
       transition: color 0.15s;
     }
-    .remove-btn:hover { color: var(--red); }
+    .remove-btn:hover { color: #4a90d9; }
 
     .card-metrics {
       display: grid;
@@ -305,7 +306,7 @@
     }
 
     .metric-value.pos { color: var(--green); }
-    .metric-value.neg { color: var(--red); }
+    .metric-value.neg { color: #4a90d9; }
 
     .bank-row {
       display: flex;
@@ -358,7 +359,7 @@
       transition: width 0.6s ease;
     }
 
-    .bar-fill.neg { background: var(--red); }
+    .bar-fill.neg { background: #1a4fa0; }
 
     /* EMPTY STATE */
     .empty-state {
@@ -433,7 +434,7 @@
       width: 24px;
       height: 24px;
       border: 2px solid var(--border);
-      border-top-color: var(--red);
+      border-top-color: #4a90d9;
       border-radius: 50%;
       animation: spin 0.7s linear infinite;
       margin: 0 auto 12px;
@@ -491,7 +492,7 @@
         <line x1="1" y1="9" x2="17" y2="9" stroke="white" stroke-width="1.5" opacity="0.5"/>
       </svg>
     </div>
-    <div class="nav-title">Rio Laser <span>Group</span></div>
+    <div class="nav-title">Head Oversea <span>Group</span></div>
   </div>
   <div class="nav-right">
     <div class="period-tag" id="period-tag">MTD</div>
