@@ -51,12 +51,32 @@ app.get('/callback', async (req, res) => {
     const realmId = authResponse.token?.realmId || token.realmId;
     if (!realmId) return res.redirect('/?error=no_realm');
 
-    const qbo = new QuickBooks(process.env.QB_CLIENT_ID, process.env.QB_CLIENT_SECRET, token.access_token, false, realmId, true, false, null, '2.0', token.refresh_token);
+    const qbo = new QuickBooks(
+      process.env.QB_CLIENT_ID, process.env.QB_CLIENT_SECRET,
+      token.access_token, false, realmId, true, false, null, '2.0', token.refresh_token
+    );
 
     qbo.getCompanyInfo(realmId, (err, data) => {
-      const companyName = data?.CompanyInfo?.CompanyName || data?.QueryResponse?.CompanyInfo?.[0]?.CompanyName || ('Empresa ' + realmId);
-      connectedCompanies[realmId] = { realmId, companyName, accessToken: token.access_token, refreshToken: token.refresh_token, tokenExpiry: Date.now() + ((token.expires_in || 3600) * 1000) };
-      console.log('Connected:', companyName);
+      // Log full response to diagnose
+      console.log('CompanyInfo raw:', JSON.stringify(data));
+      
+      let companyName = 'Empresa ' + realmId;
+      if (data) {
+        // Try multiple possible response shapes
+        companyName = data?.CompanyInfo?.CompanyName
+          || data?.QueryResponse?.CompanyInfo?.[0]?.CompanyName
+          || data?.companyName
+          || data?.name
+          || companyName;
+      }
+
+      connectedCompanies[realmId] = {
+        realmId, companyName,
+        accessToken: token.access_token,
+        refreshToken: token.refresh_token,
+        tokenExpiry: Date.now() + ((token.expires_in || 3600) * 1000)
+      };
+      console.log('Connected:', companyName, realmId);
       res.redirect('/?connected=' + encodeURIComponent(companyName));
     });
   } catch (err) {
@@ -77,17 +97,25 @@ async function getValidToken(company) {
   return company.accessToken;
 }
 
-function parsePL(rows) {
+function extractPL(rows) {
   let revenue = 0, expenses = 0;
-  for (const section of rows) {
-    const header = (section?.Header?.ColData?.[0]?.value || '').toLowerCase();
-    const summary = section?.Summary?.ColData;
+  for (const row of rows || []) {
+    const type = row?.type || '';
+    const header = (row?.Header?.ColData?.[0]?.value || '').toLowerCase();
+    const summary = row?.Summary?.ColData;
     const val = summary ? (parseFloat(summary[1]?.value) || 0) : 0;
-    if (header.includes('income') || header.includes('revenue') || header.includes('sales')) revenue += val;
-    else if (header.includes('expense') || header.includes('cost')) expenses += Math.abs(val);
-    if (section?.Rows?.Row && !header.includes('income') && !header.includes('expense')) {
-      const sub = parsePL(section.Rows.Row);
-      revenue += sub.revenue; expenses += sub.expenses;
+    
+    if (header.includes('income') || header.includes('revenue') || header.includes('sales') || header.includes('total income')) {
+      if (!isNaN(val)) revenue += val;
+    } else if (header.includes('expense') || header.includes('cost') || header.includes('total expense')) {
+      if (!isNaN(val)) expenses += Math.abs(val);
+    }
+    
+    // Recurse into sub-rows only if not already captured
+    if (row?.Rows?.Row && !header.includes('income') && !header.includes('expense')) {
+      const sub = extractPL(row.Rows.Row);
+      revenue += sub.revenue;
+      expenses += sub.expenses;
     }
   }
   return { revenue, expenses };
@@ -100,17 +128,27 @@ app.get('/api/companies', (req, res) => {
 app.get('/api/dashboard', async (req, res) => {
   const { start, end } = getMTDRange();
   const results = [];
+
   for (const company of Object.values(connectedCompanies)) {
     try {
       const token = await getValidToken(company);
-      const qbo = new QuickBooks(process.env.QB_CLIENT_ID, process.env.QB_CLIENT_SECRET, token, false, company.realmId, true, false, null, '2.0', company.refreshToken);
+      const qbo = new QuickBooks(
+        process.env.QB_CLIENT_ID, process.env.QB_CLIENT_SECRET,
+        token, false, company.realmId, true, false, null, '2.0', company.refreshToken
+      );
 
+      // P&L
       const plData = await new Promise((resolve, reject) => {
-        qbo.reportProfitAndLoss({ start_date: start, end_date: end }, (err, data) => err ? reject(err) : resolve(data));
+        qbo.reportProfitAndLoss({ start_date: start, end_date: end }, (err, data) => {
+          if (err) return reject(err);
+          console.log('PL rows:', JSON.stringify(data?.Rows?.Row?.map(r => r?.Header?.ColData?.[0]?.value)));
+          resolve(data);
+        });
       });
 
-      const { revenue, expenses } = parsePL(plData?.Rows?.Row || []);
+      const { revenue, expenses } = extractPL(plData?.Rows?.Row || []);
 
+      // Bank balance
       let bankBalance = null;
       try {
         const bsData = await new Promise((resolve, reject) => {
@@ -120,7 +158,7 @@ app.get('/api/dashboard', async (req, res) => {
           for (const row of rows || []) {
             const cols = row?.ColData || [];
             const label = (cols[0]?.value || '').toLowerCase();
-            if ((label.includes('check') || label.includes('bank') || label.includes('1100')) && bankBalance === null) {
+            if (bankBalance === null && (label.includes('check') || label.includes('bank') || label.includes('1100'))) {
               const v = parseFloat(cols[1]?.value);
               if (!isNaN(v)) bankBalance = v;
             }
@@ -128,10 +166,17 @@ app.get('/api/dashboard', async (req, res) => {
           }
         };
         walkRows(bsData?.Rows?.Row || []);
-      } catch (e) {}
+      } catch (e) { console.log('BS error:', e.message); }
 
-      results.push({ realmId: company.realmId, companyName: company.companyName, revenue: Math.round(revenue), expenses: Math.round(expenses), netIncome: Math.round(revenue - expenses), bankBalance: bankBalance !== null ? Math.round(bankBalance) : null });
+      results.push({
+        realmId: company.realmId, companyName: company.companyName,
+        revenue: Math.round(revenue), expenses: Math.round(expenses),
+        netIncome: Math.round(revenue - expenses),
+        bankBalance: bankBalance !== null ? Math.round(bankBalance) : null
+      });
+
     } catch (err) {
+      console.error('Dashboard error for', company.companyName, ':', err.message);
       results.push({ realmId: company.realmId, companyName: company.companyName, revenue: 0, expenses: 0, netIncome: 0, bankBalance: null, error: err.message });
     }
   }
